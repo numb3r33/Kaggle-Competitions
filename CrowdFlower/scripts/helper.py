@@ -84,14 +84,20 @@ def quadratic_weighted_kappa(y, y_pred):
     return (1.0 - numerator / denominator)
 
 def load_file(filename, index_col):
-    return pd.read_csv(filename, index_col=index_col)
+    return pd.read_csv(filename, index_col=index_col).fillna('')
 
-def create_dataframe(data):
-    return pd.DataFrame(data)
+def prepareText(df):
+    return list(df.apply(lambda x: '%s %s %s' %(x['query'], x['product_title'], x['product_description']), axis=1))
 
-def save_dataframe(df, filename):
-    df.to_csv('./xgboost/' + filename)
+def getTargetVariable(df):
+    return df.median_relevance.values
 
-def save_data_as_csv(X, filename):
-    df = create_dataframe(X)
-    save_dataframe(df, filename)
+def how_uncorrelated(ytrue, model1pred, model2pred):
+    count = 0
+
+    for i in range(len(ytrue)):
+        if ytrue[i] != model1pred[i] and ytrue[i] != model2pred[i]:
+            if model1pred[i] != model2pred[i]:
+                count += 1
+
+    return (count * 1. / len(ytrue)) * 100.0
