@@ -1,4 +1,4 @@
 CrowdFlower/data
 CrowdFlower/papers
 CrowdFlower/submissions
-CrowdFlower/.ipynb-checkpoints/
+CrowdFlower/.ipynb_checkpoints/*.ipynb

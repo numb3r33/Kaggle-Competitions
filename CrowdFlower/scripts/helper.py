@@ -1,6 +1,25 @@
 import numpy as np
 import pandas as pd
+from nltk.stem import PorterStemmer
+from nltk.stem.wordnet import WordNetLemmatizer
+import re
+from HTMLParser import HTMLParser
+from sklearn.cross_validation import StratifiedShuffleSplit
 
+class MLStripper(HTMLParser):
+    def __init__(self):
+        self.reset()
+        self.fed = []
+    def handle_data(self, d):
+        self.fed.append(d)
+    def get_data(self):
+        return ''.join(self.fed)
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()
+    
 def confusion_matrix(rater_a, rater_b, min_rating=None, max_rating=None):
     """
     Returns the confusion matrix between rater's ratings
@@ -101,3 +120,51 @@ def how_uncorrelated(ytrue, model1pred, model2pred):
                 count += 1
 
     return (count * 1. / len(ytrue)) * 100.0
+
+def strip_html(data):
+    return [strip_tags(text) for text in data ]
+
+def stem_text(data):
+    stemmer = PorterStemmer()
+    stemmed_text = []
+
+    for text in data:
+        words = text.split(' ')
+        stemmed_words = []
+
+        for word in words:
+            stemmed_words.append(stemmer.stem(word.lower()))
+
+        stemmed_text.append(' '.join(stemmed_words))
+
+    return stemmed_text
+
+def ssSplit(y, train_size=1000, random_state=0):
+    sss = StratifiedShuffleSplit(y, 3, train_size=train_size, random_state=random_state)
+    train_index, test_index = next(iter(sss))
+
+    return (train_index, test_index) 
+
+def getText(data, y, label):
+    return [data[i] for i in range(len(y)) if y[i] == label]
+
+def lemmatize_text(data):
+    lmtzr = WordNetLemmatizer()
+    lemmatized_text = []
+
+    for text in data:
+        words = text.split(' ')
+        lemmatized_words = []
+
+        for word in words:
+            lemmatized_words.append(lmtzr.lemmatize(word.lower()))
+
+        lemmatized_text.append(' '.join(lemmatized_words))
+
+    return lemmatized_text
+
+
+def make_submission(idx, preds, filename):
+    submission = pd.DataFrame({"id": idx, "prediction": preds})
+    submission.to_csv("./submissions/" + filename, index=False)
+
