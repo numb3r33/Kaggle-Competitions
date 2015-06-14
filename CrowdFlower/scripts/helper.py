@@ -5,6 +5,7 @@ from nltk.stem.wordnet import WordNetLemmatizer
 import re
 from HTMLParser import HTMLParser
 from sklearn.cross_validation import StratifiedShuffleSplit
+from bs4 import BeautifulSoup
 
 class MLStripper(HTMLParser):
     def __init__(self):
@@ -108,9 +109,6 @@ def load_file(filename, index_col):
 def prepareText(df):
     return list(df.apply(lambda x: '%s %s %s' %(x['query'], x['product_title'], x['product_description']), axis=1))
 
-def getTargetVariable(df):
-    return df.median_relevance.values
-
 def how_uncorrelated(ytrue, model1pred, model2pred):
     count = 0
 
@@ -123,6 +121,9 @@ def how_uncorrelated(ytrue, model1pred, model2pred):
 
 def strip_html(data):
     return [strip_tags(text) for text in data ]
+
+def parseHTML(data):
+    return ' '.join([p.get_text() for p in BeautifulSoup(data)])
 
 def stem_text(data):
     stemmer = PorterStemmer()
@@ -145,8 +146,13 @@ def ssSplit(y, train_size=1000, random_state=0):
 
     return (train_index, test_index) 
 
+
+'''
+Gets data for a particular relevance score
+'''
 def getText(data, y, label):
     return [data[i] for i in range(len(y)) if y[i] == label]
+
 
 def lemmatize_text(data):
     lmtzr = WordNetLemmatizer()
@@ -163,6 +169,37 @@ def lemmatize_text(data):
 
     return lemmatized_text
 
+
+def tweak_text(train):
+    s_data = []
+    stemmer = PorterStemmer()
+
+    for i in range(train.shape[0]):
+        s = (" ").join(["q"+ z for z in BeautifulSoup(train["query"].iloc[i]).get_text(" ").split(" ")]) + " " + (" ").join(["z"+ z for z in BeautifulSoup(train.product_title.iloc[i]).get_text(" ").split(" ")]) + " " + BeautifulSoup(train.product_description.iloc[i]).get_text(" ")
+        s = re.sub("[^a-zA-Z0-9]"," ", s)
+        s = (" ").join([stemmer.stem(z) for z in s.split(" ")])
+        s_data.append(s)
+    
+    return s_data
+
+def lemmatize_text(train):
+    s_data = []
+    lmtzr = WordNetLemmatizer()
+    
+    for i in range(train.shape[0]):
+        s = (" ").join(["q"+ z for z in BeautifulSoup(train["query"].iloc[i]).get_text(" ").split(" ")]) + " " + (" ").join(["z"+ z for z in BeautifulSoup(train.product_title.iloc[i]).get_text(" ").split(" ")]) + " " + BeautifulSoup(train.product_description.iloc[i]).get_text(" ")
+        s = re.sub("[^a-zA-Z0-9]"," ", s)
+        s = (" ").join([lmtzr.lemmatize(z) for z in s.split(" ")])
+        s_data.append(s)
+    
+    return s_data
+
+
+'''
+Make a submission file in submissions folder in
+current working directory that can be uploaded to
+Kaggle.
+'''
 
 def make_submission(idx, preds, filename):
     submission = pd.DataFrame({"id": idx, "prediction": preds})
