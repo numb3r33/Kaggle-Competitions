@@ -6,6 +6,7 @@ import re
 from HTMLParser import HTMLParser
 from sklearn.cross_validation import StratifiedShuffleSplit
 from bs4 import BeautifulSoup
+from collections import Counter
 
 class MLStripper(HTMLParser):
     def __init__(self):
@@ -104,7 +105,10 @@ def quadratic_weighted_kappa(y, y_pred):
     return (1.0 - numerator / denominator)
 
 def load_file(filename, index_col):
-    return pd.read_csv(filename, index_col=index_col).fillna('')
+    if index_col:
+        return pd.read_csv(filename, index_col=index_col).fillna('')
+    else:
+        return pd.read_csv(filename).fillna('')
 
 def prepareText(df):
     return list(df.apply(lambda x: '%s %s %s' %(x['query'], x['product_title'], x['product_description']), axis=1))
@@ -193,6 +197,10 @@ def lemmatize_text(train):
         s_data.append(s)
     
     return s_data
+
+def most_common(arr):
+    arr = Counter(arr)
+    return arr.most_common(1)[0][0]
 
 
 '''
