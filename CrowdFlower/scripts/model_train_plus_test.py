@@ -6,6 +6,7 @@ from sklearn.svm import SVC
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.feature_selection import SelectPercentile, chi2
+from sklearn.linear_model import LogisticRegression
 
 
 def TFIDF(Xtrain, Xwhole):
@@ -34,6 +35,15 @@ def build_non_linear_model(Xtrain, y):
 
 
 	return (clf.fit(Xtrain, y), svd, scl)
+
+def build_log_reg_model(Xtrain, y):
+	select = SelectPercentile(score_func=chi2, percentile=20)
+	Xtrain = select.fit_transform(Xtrain, y)
+	
+	clf = SVC(C=12.0, kernel='linear', probability=True)
+
+	return (clf.fit(Xtrain, y), select)
+
 
 def build_linear_model(X, y):
 	select = SelectPercentile(score_func=chi2, percentile=15)
