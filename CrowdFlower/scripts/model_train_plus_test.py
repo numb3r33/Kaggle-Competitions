@@ -36,18 +36,9 @@ def build_non_linear_model(Xtrain, y):
 
 	return (clf.fit(Xtrain, y), svd, scl)
 
-def build_log_reg_model(Xtrain, y):
-	select = SelectPercentile(score_func=chi2, percentile=20)
-	Xtrain = select.fit_transform(Xtrain, y)
-	
-	clf = SVC(C=12.0, kernel='linear', probability=True)
-
-	return (clf.fit(Xtrain, y), select)
-
-
 def build_linear_model(X, y):
-	select = SelectPercentile(score_func=chi2, percentile=15)
-	clf = SVC(C=12.0, kernel='linear')
+	select = SelectPercentile(score_func=chi2, percentile=20)
+	clf = SVC(C=10.0, kernel='linear', probability=True)
 
 	X = select.fit_transform(X, y)
 	return (clf.fit(X, y), select)

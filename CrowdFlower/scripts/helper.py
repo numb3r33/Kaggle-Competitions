@@ -7,6 +7,9 @@ from HTMLParser import HTMLParser
 from sklearn.cross_validation import StratifiedShuffleSplit
 from bs4 import BeautifulSoup
 from collections import Counter
+import difflib
+from nltk import bigrams
+
 
 class MLStripper(HTMLParser):
     def __init__(self):
@@ -150,6 +153,47 @@ def ssSplit(y, train_size=1000, random_state=0):
 
     return (train_index, test_index) 
 
+'''
+Auto correct a query based on the training set
+'''
+def build_query_correction_map(train, test):
+    # get all queries
+    queries = set(train['query'].values)
+    correct_map = {}
+
+    for q in queries:
+        corrected_q = autocorrect_query(q, train, test)
+        correct_map[q] = corrected_q
+
+    return correct_map
+
+def autocorrect_query(query, train=None, test=None, cutoff=0.8):
+    train_data = train.values[train['query'].values == query, :]
+    test_data = test.values[test['query'].values == query, :]
+
+    s = ''
+
+    for r in train_data:
+        s = "%s %s %s"%(s,BeautifulSoup(r[2]).get_text(" ",strip=True),BeautifulSoup(r[3]).get_text(" ",strip=True))
+    
+    for r in test_data:
+        s = "%s %s %s"%(s,BeautifulSoup(r[2]).get_text(" ",strip=True),BeautifulSoup(r[3]).get_text(" ",strip=True))
+    
+    s = re.findall(r'[\'\"\w]+',s.lower())
+    s_bigram = [' '.join(i) for i in bigrams(s)]
+    s.extend(s_bigram)
+    
+    corrected_query = []    
+    for q in query.lower().split():
+        if len(q)<=2:
+            corrected_query.append(q)
+            continue
+        corrected_word = difflib.get_close_matches(q, s,n=1,cutoff=cutoff)
+        if len(corrected_word) >0:
+            corrected_query.append(corrected_word[0])
+        else :
+            corrected_query.append(q)   
+    return ' '.join(corrected_query)
 
 '''
 Gets data for a particular relevance score
