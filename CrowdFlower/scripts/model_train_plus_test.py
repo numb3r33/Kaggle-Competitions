@@ -10,7 +10,7 @@ from sklearn.linear_model import LogisticRegression
 
 
 def TFIDF(Xtrain, Xwhole):
-	tfv = TfidfVectorizer(min_df=3, max_df=500, max_features=None,
+	tfv = TfidfVectorizer(min_df=3, max_df=600, max_features=None,
 		  strip_accents='unicode', analyzer='word', token_pattern=r'\w{1,}',
 		  ngram_range=(1, 2), use_idf=True, smooth_idf=True, sublinear_tf=True, stop_words = 'english')
 
