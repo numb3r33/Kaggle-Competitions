@@ -5,14 +5,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.feature_selection import SelectPercentile, chi2
+from sklearn.feature_selection import SelectPercentile, chi2, RFECV
 from sklearn.linear_model import LogisticRegression
 
 
 def TFIDF(Xtrain, Xwhole):
-	tfv = TfidfVectorizer(min_df=3, max_df=600, max_features=None,
+	tfv = TfidfVectorizer(min_df=3, max_df=700, max_features=None,
 		  strip_accents='unicode', analyzer='word', token_pattern=r'\w{1,}',
-		  ngram_range=(1, 2), use_idf=True, smooth_idf=True, sublinear_tf=True, stop_words = 'english')
+		  ngram_range=(1, 3), use_idf=True, smooth_idf=True, sublinear_tf=True, stop_words = 'english')
 
 	if Xwhole == None:
 		return (tfv.fit_transform(Xtrain), tfv)
@@ -53,6 +53,12 @@ def build_knn_model(Xtrain, y):
 	clf = KNeighborsClassifier(n_neighbors=5, weights='distance', algorithm='brute')
 
 	return (clf.fit(Xtrain, y), svd, scl)
+
+def feature_selection(X, y, pipeline, step=1, cv=None, scoring=None, estimator_params=None, verbose=0):
+	selector = RFECV(pipeline, step=step, cv=cv, scoring=scoring, estimator_params=estimator_params, verbose=verbose)
+	selector.fit(X, y)
+
+	return selector
 
 
 def make_predictions(model, options, Xtest):

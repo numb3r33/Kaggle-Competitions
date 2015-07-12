@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from collections import Counter
 import difflib
 from nltk import bigrams
+from sklearn.metrics import make_scorer
 
 
 class MLStripper(HTMLParser):
@@ -218,17 +219,30 @@ def lemmatize_text(data):
     return lemmatized_text
 
 
+# def tweak_text(train):
+#     s_data = []
+#     stemmer = PorterStemmer()
+
+#     for i in range(train.shape[0]):
+#         s = (" ").join(["q"+ z for z in BeautifulSoup(train["query"].iloc[i]).get_text(" ").split(" ")]) + " " + (" ").join(["z"+ z for z in BeautifulSoup(train.product_title.iloc[i]).get_text(" ").split(" ")]) + " " + BeautifulSoup(train.product_description.iloc[i]).get_text(" ")
+#         s = re.sub("[^a-zA-Z0-9]"," ", s)
+#         s = (" ").join([stemmer.stem(z) for z in s.split(" ")])
+#         s_data.append(s)
+    
+#     return s_data
+
 def tweak_text(train):
     s_data = []
     stemmer = PorterStemmer()
 
     for i in range(train.shape[0]):
-        s = (" ").join(["q"+ z for z in BeautifulSoup(train["query"].iloc[i]).get_text(" ").split(" ")]) + " " + (" ").join(["z"+ z for z in BeautifulSoup(train.product_title.iloc[i]).get_text(" ").split(" ")]) + " " + BeautifulSoup(train.product_description.iloc[i]).get_text(" ")
+        s = (" ").join(["q"+ z for z in BeautifulSoup(train["query"].iloc[i]).get_text(" ").split(" ")]) + " " + (" ").join(["z"+ z for z in BeautifulSoup(train.product_title.iloc[i]).get_text(" ").split(" ")])
         s = re.sub("[^a-zA-Z0-9]"," ", s)
         s = (" ").join([stemmer.stem(z) for z in s.split(" ")])
         s_data.append(s)
     
     return s_data
+
 
 def lemmatize_text(train):
     s_data = []
@@ -245,6 +259,9 @@ def lemmatize_text(train):
 def most_common(arr):
     arr = Counter(arr)
     return arr.most_common(1)[0][0]
+
+def get_kappa_scorer():
+    return make_scorer(quadratic_weighted_kappa, greater_is_better=True)
 
 
 '''
