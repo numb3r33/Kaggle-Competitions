@@ -2,3 +2,5 @@ data/
 scripts/
 submissions/
 *.zip
+*.csv
+*.ipynb_checkpoints/*
