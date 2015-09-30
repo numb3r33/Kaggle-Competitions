@@ -3,4 +3,4 @@ scripts/
 submissions/
 *.zip
 *.csv
-*.ipynb_checkpoints/*
+.ipynb_checkpoints/
