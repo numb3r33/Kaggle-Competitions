@@ -4,10 +4,7 @@ import numpy as np
 from sklearn.cross_validation import train_test_split
 
 class Rossman():
-    train_file_path = ''
-    test_file_path = ''
-    stores_file_path = ''
-
+    
     def __init__(self, train_file_path, test_file_path, stores_file_path):
         """
         Sets in the file path for training, test and store
@@ -34,21 +31,21 @@ class Rossman():
         mask = self.train_df.Sales > 0
         return self.train_df[mask]
 
-    def split_train_test_mask(self, test_size=0.3, random_state=0):
+    def split_train_test_mask(self, train_df, threshold_date, random_state=0):
 
         """
         Splits the train_df into training and testing set
         training data will have all the examples except for last 6 weeks
         test data will examples for last 6 weeks
         """
-        train_idx, test_idx = train_test_split(xrange(self.train_df.shape[0]), test_size=test_size, random_state=random_state)
-        mask = np.ones(self.train_df.shape[0], dtype='int')
-        mask[train_idx] = 1
-        mask[test_idx] = 0
+        features = train_df.columns.drop(['Customers', 'PromoInterval'])
+        
+        train_df_before_threshold = train_df[train_df.Date <= threshold_date][features]
+        train_df_afer_threhold = train_df[train_df.Date > threshold_date][features]
 
-        mask = (mask==1)
+        return train_df_before_threshold, train_df_afer_threhold
 
-        return mask
+
 
     def merge_stores_data(self):
         """
@@ -59,26 +56,3 @@ class Rossman():
         self.test_df = pd.merge(self.test_df, self.stores_df, on='Store', how='left')
 
 
-    def rmspe(self, y_true, y_pred):
-        """
-        Root Mean Square Percentage Error
-
-        Args:
-        y_true: true values for y
-        y_pred: estimated values for y
-
-        Returns: rmspe
-        """
-
-        n = len(y_true)
-        e = []
-        for i in range(n):
-            if y_true[i] != 0:
-                e.append((y_true[i] - y_pred[i]) / np.float(y_true[i]))
-            else:
-                e.append(0.0)
-
-        e = np.array(e)
-        e_squared = e ** 2
-
-        return sqrt(np.sum(e_squared) / n)
