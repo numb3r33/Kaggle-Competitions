@@ -45,14 +45,11 @@ def encode_labels(train, test):
 
 	return train, test
 
-def cv_optimize_xgb(X, y, cv, clf):
+def cv_optimize(X, y, cv, clf, parameters):
 	"""
 	Randomized Grid search on the parameter space to find out the best
 	parameter settings to produce an accurate model
 	"""
-
-	parameters = dict([('n_estimators', [75, 150]), ('learning_rate', [.03, .01, 0.08]), ('max_depth', [8, 10]),
-		               ('min_child_weight', [5, 10]), ('subsample', [0.8]), ('colsample_bytree', [0.8])])
 
 	rs = RandomizedSearchCV(clf, param_distributions=parameters, cv=cv, scoring='roc_auc')
 	rs.fit(X, y)
