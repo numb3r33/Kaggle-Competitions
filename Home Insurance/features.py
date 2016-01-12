@@ -30,12 +30,14 @@ class FeatureTransformer(BaseEstimator):
 
 	def fit_transform(self, X, y=None):
 		date_features = self._process_dates(X)
+		is_nan_features = self._is_nan(X)
 		categorical_features = self._process_categorical_features(X)
 		numerical_features = self._process_numerical_features(X)
 
 		features = []
 		
 		features.append(date_features)
+		features.append(is_nan_features)
 		features.append(categorical_features)
 		features.append(numerical_features)
 
@@ -51,6 +53,12 @@ class FeatureTransformer(BaseEstimator):
 		weekday_original_quote = X.Original_Quote_Date.dt.weekday
 
 		return np.array([year_original_quote, month_original_quote, weekday_original_quote]).T
+
+	def _is_nan(self, X):
+		'Check to see whether record has any nan value or not'
+		null_check = X.apply(lambda x: -1 in x.values, axis=1) * 1.
+
+		return np.array(null_check).reshape(-1, 1)
 
 	def _process_categorical_features(self, X):
 		'Encode categorical features into numerical features'
@@ -82,12 +90,14 @@ class FeatureTransformer(BaseEstimator):
 
 	def transform(self, X):
 		date_features = self._process_dates(X)
+		is_nan_features = self._is_nan(X)
 		categorical_features = self._process_categorical_features(X)
 		numerical_features = self._process_numerical_features(X)
 
 		features = []
 		
 		features.append(date_features)
+		features.append(is_nan_features)
 		features.append(categorical_features)
 		features.append(numerical_features)
 
