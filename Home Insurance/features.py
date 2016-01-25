@@ -7,12 +7,16 @@ import numpy as np
 
 class FeatureTransformer(BaseEstimator):
 	"""
-	Encodes categorical features to numerical features
+	Generate features
 	"""
 
-	def __init__(self, train, test):
-		self.X = train
-		self.X_test = test
+	def __init__(self):
+		self.X = pd.read_csv('./data/train.csv', parse_dates=['Original_Quote_Date'], index_col='QuoteNumber')
+		self.X_test = pd.read_csv('./data/test.csv', parse_dates=['Original_Quote_Date'], index_col='QuoteNumber')
+
+		self.X = self.X.fillna(-1)
+		self.X_test = self.X_test.fillna(-1)
+		
 
 	def get_feature_names(self):
 		feature_names = []
@@ -29,8 +33,10 @@ class FeatureTransformer(BaseEstimator):
 		return self
 
 	def fit_transform(self, X, y=None):
+		
 		date_features = self._process_dates(X)
 		is_nan_features = self._is_nan(X)
+		count_nan_features = self._count_nans(X)
 		categorical_features = self._process_categorical_features(X)
 		numerical_features = self._process_numerical_features(X)
 
@@ -38,6 +44,7 @@ class FeatureTransformer(BaseEstimator):
 		
 		features.append(date_features)
 		features.append(is_nan_features)
+		features.append(count_nan_features)
 		features.append(categorical_features)
 		features.append(numerical_features)
 
@@ -59,6 +66,13 @@ class FeatureTransformer(BaseEstimator):
 		null_check = X.apply(lambda x: -1 in x.values, axis=1) * 1.
 
 		return np.array(null_check).reshape(-1, 1)
+
+	def _count_nans(self, X):
+		'Count number of missing values in a quote'
+
+		count_nans = X.apply(lambda x: list(x.values).count(-1), axis=1)
+
+		return np.array([count_nans]).T
 
 	def _process_categorical_features(self, X):
 		'Encode categorical features into numerical features'
@@ -91,6 +105,7 @@ class FeatureTransformer(BaseEstimator):
 	def transform(self, X):
 		date_features = self._process_dates(X)
 		is_nan_features = self._is_nan(X)
+		count_nan_features = self._count_nans(X)
 		categorical_features = self._process_categorical_features(X)
 		numerical_features = self._process_numerical_features(X)
 
@@ -98,6 +113,7 @@ class FeatureTransformer(BaseEstimator):
 		
 		features.append(date_features)
 		features.append(is_nan_features)
+		features.append(count_nan_features)
 		features.append(categorical_features)
 		features.append(numerical_features)
 
