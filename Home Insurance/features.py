@@ -10,12 +10,15 @@ class FeatureTransformer(BaseEstimator):
 	Generate features
 	"""
 
-	def __init__(self):
-		self.X = pd.read_csv('./data/train.csv', parse_dates=['Original_Quote_Date'], index_col='QuoteNumber')
-		self.X_test = pd.read_csv('./data/test.csv', parse_dates=['Original_Quote_Date'], index_col='QuoteNumber')
+	def __init__(self, train, test):
+		self.X = train
+		self.X_test = test
+		# self.X = pd.read_csv('./data/train.csv', parse_dates=['Original_Quote_Date'], index_col='QuoteNumber')
+		# self.X_test = pd.read_csv('./data/test.csv', parse_dates=['Original_Quote_Date'], index_col='QuoteNumber')
 
-		self.X = self.X.fillna(-1)
-		self.X_test = self.X_test.fillna(-1)
+		# self.X = self.X.fillna(-1)
+		# self.X_test = self.X_test.fillna(-1)
+		pass
 		
 
 	def get_feature_names(self):
@@ -37,6 +40,7 @@ class FeatureTransformer(BaseEstimator):
 		date_features = self._process_dates(X)
 		is_nan_features = self._is_nan(X)
 		count_nan_features = self._count_nans(X)
+		count_undecodable = self._count_undecodable(X)
 		categorical_features = self._process_categorical_features(X)
 		numerical_features = self._process_numerical_features(X)
 
@@ -74,6 +78,13 @@ class FeatureTransformer(BaseEstimator):
 
 		return np.array([count_nans]).T
 
+	def _count_undecodable(self, X):
+		'Count number of undecodable values (0)'
+
+		count_undecodable = X.apply(lambda x: list(x.values).count(0), axis=1)
+
+		return np.array([count_undecodable]).T
+
 	def _process_categorical_features(self, X):
 		'Encode categorical features into numerical features'
 
@@ -106,6 +117,7 @@ class FeatureTransformer(BaseEstimator):
 		date_features = self._process_dates(X)
 		is_nan_features = self._is_nan(X)
 		count_nan_features = self._count_nans(X)
+		count_undecodable = self._count_undecodable(X)
 		categorical_features = self._process_categorical_features(X)
 		numerical_features = self._process_numerical_features(X)
 
