@@ -30,7 +30,7 @@ class FeatureTransformer(BaseEstimator):
 
 	def fit_transform(self, X, y=None):
 
-		corpus = X.apply(lambda x: '%s %s' %(x['search_term'], x['product_title']), axis=1)
+		corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['product_description']), axis=1)
 		words_lower = self._preprocess(corpus)
 		
 		empty_analyzer = lambda x: x
@@ -38,6 +38,7 @@ class FeatureTransformer(BaseEstimator):
 
 		unigrams = self.unigram_vect.fit_transform(words_lower)
 		is_query_in_title = self._contains_query_term(X['search_term'], X['product_title'])
+		is_query_in_description = self._contains_query_term(X['search_term'], X['product_description'])
 
 		# self.truncated_svd = TruncatedSVD(n_components=100)
 		# reduced_features = self.truncated_svd.fit_transform(unigrams)
@@ -46,6 +47,7 @@ class FeatureTransformer(BaseEstimator):
 		# features.append(reduced_features)
 		features.append(unigrams.toarray())
 		features.append(is_query_in_title)
+		features.append(is_query_in_description)
 		features = np.hstack(features)
 
 		return features
@@ -55,17 +57,17 @@ class FeatureTransformer(BaseEstimator):
 		words_lower = [' '.join([q.lower() for q in query.split(' ') if q not in self.stopwords]) for query in corpus ]
 		return words_lower
 
-	def _contains_query_term(self, search_terms, product_title):
+	def _contains_query_term(self, needles, haystacks):
 		is_query_in_title = []
 		
-		for i in range(len(search_terms)):
-			titles = product_title.irow(i)
-			query_terms = search_terms.irow(i).split(' ')
+		for i in range(len(needles)):
+			haystack = haystacks.irow(i)
+			query_terms = needles.irow(i).split(' ')
 
 			contains_terms = False
 
 			for term in query_terms:
-				if term in titles.lower():
+				if term in haystack.lower():
 					contains_terms = True
 					
 			if contains_terms:
@@ -77,10 +79,11 @@ class FeatureTransformer(BaseEstimator):
 		
 	def transform(self, X):
 		
-		corpus = X.apply(lambda x: '%s %s' %(x['search_term'], x['product_title']), axis=1)
+		corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['product_description']), axis=1)
 		words_lower = self._preprocess(corpus)
 		unigrams = self.unigram_vect.transform(words_lower)
 		is_query_in_title = self._contains_query_term(X['search_term'], X['product_title'])
+		is_query_in_description = self._contains_query_term(X['search_term'], X['product_description'])
 
 		# reduced_features = self.truncated_svd.transform(unigrams)
 
@@ -88,6 +91,7 @@ class FeatureTransformer(BaseEstimator):
 		# features.append(reduced_features)
 		features.append(unigrams.toarray())
 		features.append(is_query_in_title)
+		features.append(is_query_in_description)
 		features = np.hstack(features)
 		
 		return features
