@@ -30,33 +30,33 @@ class FeatureTransformer(BaseEstimator):
 
 	def fit_transform(self, X, y=None):
 
-		corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['product_description']), axis=1)
-		words_lower = self._preprocess(corpus)
+		# corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['product_description']), axis=1)
+		# words_lower = self._preprocess(corpus)
 		
-		empty_analyzer = lambda x: x
-		self.unigram_vect = TfidfVectorizer(analyzer=empty_analyzer, ngram_range=(1, 1), min_df=3)
+		# empty_analyzer = lambda x: x
+		# self.unigram_vect = TfidfVectorizer(analyzer=empty_analyzer, ngram_range=(1, 1), min_df=3)
 
-		unigrams = self.unigram_vect.fit_transform(words_lower)
+		# unigrams = self.unigram_vect.fit_transform(words_lower)
 
 
-		X['search_term'] = X['search_term'].map(self._remove_stopwords)
+		# X['search_term'] = X['search_term'].map(self._remove_stopwords)
 		# X['search_term'] = X['search_term'].map(self._stem_words)
 
-		X['product_title'] = X['product_title'].map(self._remove_stopwords)
+		# X['product_title'] = X['product_title'].map(self._remove_stopwords)
 		# X['product_title'] = X['product_title'].map(self._stem_words)
 		
-		X['product_description'] = X['product_description'].map(self._remove_stopwords)
+		# X['product_description'] = X['product_description'].map(self._remove_stopwords)
 		# X['product_description'] = X['product_description'].map(self._stem_words)
 
-		is_query_in_title = self._contains_query_term(X['search_term'], X['product_title'])
-		is_query_in_description = self._contains_query_term(X['search_term'], X['product_description'])
+		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
+		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
 		query_length = self._get_query_length(X['search_term'])
 
-		self.truncated_svd = TruncatedSVD(n_components=50)
-		reduced_features = self.truncated_svd.fit_transform(unigrams)
+		# self.truncated_svd = TruncatedSVD(n_components=50)
+		# reduced_features = self.truncated_svd.fit_transform(unigrams)
 		
 		features = []
-		features.append(reduced_features)
+		# features.append(reduced_features)
 		# features.append(unigrams.toarray())
 		features.append(is_query_in_title)
 		features.append(is_query_in_description)
@@ -82,52 +82,54 @@ class FeatureTransformer(BaseEstimator):
 
 		return np.array([query_length]).T
 
-	def _contains_query_term(self, needles, haystacks):
-		is_query_in_title = []
+	def _contains_query_term(self, needle, haystack):
+		# is_query_in_title = []
 		
-		for i in range(len(needles)):
-			haystack = haystacks.irow(i)
-			query_terms = needles.irow(i).split(' ')
+		# for i in range(len(needles)):
+		# 	haystack = haystacks.irow(i)
+		# 	query_terms = needles.irow(i).split(' ')
 
-			contains_terms = False
+		# 	contains_terms = False
 
-			for term in query_terms:
-				if term in haystack.lower():
-					contains_terms = True
+		# 	for term in query_terms:
+		# 		if term in haystack.lower():
+		# 			contains_terms = True
 					
-			if contains_terms:
-				is_query_in_title.append(1)
-			else:
-				is_query_in_title.append(0)
+		# 	if contains_terms:
+		# 		is_query_in_title.append(1)
+		# 	else:
+		# 		is_query_in_title.append(0)
 
-		return np.array([is_query_in_title]).T
+		# return np.array([is_query_in_title]).T
+		return sum(int(haystack.find(word)>=0) for word in needle.split())
+
+	
 		
 	def transform(self, X):
 		
-		corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['product_description']), axis=1)
-		words_lower = self._preprocess(corpus)
-		unigrams = self.unigram_vect.transform(words_lower)
+		# corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['product_description']), axis=1)
+		# words_lower = self._preprocess(corpus)
+		# unigrams = self.unigram_vect.transform(words_lower)
 
-		X['search_term'] = X['search_term'].map(self._remove_stopwords)
+		# X['search_term'] = X['search_term'].map(self._remove_stopwords)
 		# X['search_term'] = X['search_term'].map(self._stem_words)
 
-		X['product_title'] = X['product_title'].map(self._remove_stopwords)
+		# X['product_title'] = X['product_title'].map(self._remove_stopwords)
 		# X['product_title'] = X['product_title'].map(self._stem_words)
 		
-		X['product_description'] = X['product_description'].map(self._remove_stopwords)
+		# X['product_description'] = X['product_description'].map(self._remove_stopwords)
 		# X['product_description'] = X['product_description'].map(self._stem_words)
 
 
-
-		is_query_in_title = self._contains_query_term(X['search_term'], X['product_title'])
-		is_query_in_description = self._contains_query_term(X['search_term'], X['product_description'])
+		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
+		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
 		query_length = self._get_query_length(X['search_term'])
 		
 
-		reduced_features = self.truncated_svd.transform(unigrams)
+		# reduced_features = self.truncated_svd.transform(unigrams)
 
 		features = []
-		features.append(reduced_features)
+		# features.append(reduced_features)
 		# features.append(unigrams.toarray())
 		features.append(is_query_in_title)
 		features.append(is_query_in_description)
