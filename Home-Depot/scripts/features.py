@@ -35,13 +35,19 @@ class FeatureTransformer(BaseEstimator):
 		
 		X['search_term'] = X['search_term'].map(self._remove_stopwords)
 		X['search_term'] = X['search_term'].map(self._stem_words)
+		X['search_term'] = X['search_term'].map(self._preprocess)
 
 		X['product_title'] = X['product_title'].map(self._remove_stopwords)
 		X['product_title'] = X['product_title'].map(self._stem_words)
-		
+		X['product_title'] = X['product_title'].map(self._preprocess)
+
+		num_sentences = X['product_description'].map(self._num_sentences).reshape(-1, 1)
+
 		X['product_description'] = X['product_description'].map(self._remove_stopwords)
 		X['product_description'] = X['product_description'].map(self._add_periods)
 		X['product_description'] = X['product_description'].map(self._stem_words)
+		X['product_description'] = X['product_description'].map(self._preprocess)
+
 
 		# corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['product_description']), axis=1)
 		# self.count_vect = CountVectorizer(analyzer='word', min_df=2)
@@ -51,8 +57,7 @@ class FeatureTransformer(BaseEstimator):
 		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
 		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
 		query_length = self._get_query_length(X['search_term'])
-		num_sentences = X['product_description'].map(self._num_sentences).reshape(-1, 1)
-
+		
 		# self.selector = SelectKBest(f_regression, k=10)
 		# reduced_features = self.selector.fit_transform(bow.todense(), X['relevance'])
 
@@ -73,7 +78,24 @@ class FeatureTransformer(BaseEstimator):
 	
 	def _remove_stopwords(self, sentence):
 		return ' '.join([re.sub(r'[^\w\s\d]','',word.lower()) for word in sentence.split() if word not in self.stopwords])
-		
+
+	def _preprocess(self, sentence):
+		sentence = sentence.replace('x', ' times ')
+		sentence = sentence.replace("'", ' inches ')
+		sentence = sentence.replace('in.', ' inches ')
+		sentence = sentence.replace('ft', ' feet ')
+		sentence = sentence.replace('mm', ' milimeters ')
+		sentence = sentence.replace('btu', 'british thermal unit ')
+		sentence = sentence.replace('cc', ' cubic centimeters ')
+		sentence = sentence.replace('cfm', ' cubic feet per minute ')
+		sentence = sentence.replace('ga', ' gallons ')
+		sentence = sentence.replace('lbs', ' pounds ')
+		sentence = sentence.replace('*', ' times ')
+
+		return sentence
+
+
+
 	def _get_query_length(self, search_terms):
 		query_length = search_terms.map(lambda x: len(x.split(' ')))
 
@@ -98,13 +120,19 @@ class FeatureTransformer(BaseEstimator):
 	def transform(self, X):
 		X['search_term'] = X['search_term'].map(self._remove_stopwords)
 		X['search_term'] = X['search_term'].map(self._stem_words)
+		X['search_term'] = X['search_term'].map(self._preprocess)
+
 
 		X['product_title'] = X['product_title'].map(self._remove_stopwords)
 		X['product_title'] = X['product_title'].map(self._stem_words)
+		X['product_title'] = X['product_title'].map(self._preprocess)
 		
+		num_sentences = X['product_description'].map(self._num_sentences).reshape(-1, 1)
+
 		X['product_description'] = X['product_description'].map(self._remove_stopwords)
 		X['product_description'] = X['product_description'].map(self._add_periods)
 		X['product_description'] = X['product_description'].map(self._stem_words)
+		X['product_description'] = X['product_description'].map(self._preprocess)
 
 
 		# corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['product_description']), axis=1)
@@ -114,7 +142,6 @@ class FeatureTransformer(BaseEstimator):
 		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
 		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
 		query_length = self._get_query_length(X['search_term'])
-		num_sentences = X['product_description'].map(self._num_sentences).reshape(-1, 1)
 		
 
 		# reduced_features = self.selector.transform(bow.todense())
