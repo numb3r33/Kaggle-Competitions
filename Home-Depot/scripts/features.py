@@ -39,8 +39,9 @@ class FeatureTransformer(BaseEstimator):
 		X['product_title'] = X['product_title'].map(self._remove_stopwords)
 		X['product_title'] = X['product_title'].map(self._stem_words)
 		
-		X['value'] = X['value'].map(self._remove_stopwords)
-		X['value'] = X['value'].map(self._stem_words)
+		X['product_description'] = X['product_description'].map(self._remove_stopwords)
+		X['product_description'] = X['product_description'].map(self._add_periods)
+		X['product_description'] = X['product_description'].map(self._stem_words)
 
 		# corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['product_description']), axis=1)
 		# self.count_vect = CountVectorizer(analyzer='word', min_df=2)
@@ -48,8 +49,9 @@ class FeatureTransformer(BaseEstimator):
 
 		
 		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
-		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['value']), axis=1).reshape(-1, 1)
+		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
 		query_length = self._get_query_length(X['search_term'])
+		num_sentences = X['product_description'].map(self._num_sentences).reshape(-1, 1)
 
 		# self.selector = SelectKBest(f_regression, k=10)
 		# reduced_features = self.selector.fit_transform(bow.todense(), X['relevance'])
@@ -60,6 +62,7 @@ class FeatureTransformer(BaseEstimator):
 		features.append(is_query_in_title)
 		features.append(is_query_in_description)
 		features.append(query_length)
+		features.append(num_sentences)
 
 		features = np.hstack(features)
 
@@ -79,6 +82,17 @@ class FeatureTransformer(BaseEstimator):
 	def _contains_query_term(self, needle, haystack):
 		return sum(int(haystack.find(word)>=0) for word in needle.split())
 
+	def _num_sentences(self, text):
+		return len(text.split('.'))
+
+	def _add_periods(self, sentence):
+		def transform(matchobj):
+			matched_group = matchobj.group(0)
+			uppercase_index = re.search(r'[A-Z]', matched_group).start()
+			return matched_group[:uppercase_index] + '. ' + matched_group[uppercase_index:]
+		
+		return re.sub(r'[a-z]+[A-Z][a-z]+', transform, sentence)
+
 	
 		
 	def transform(self, X):
@@ -88,8 +102,9 @@ class FeatureTransformer(BaseEstimator):
 		X['product_title'] = X['product_title'].map(self._remove_stopwords)
 		X['product_title'] = X['product_title'].map(self._stem_words)
 		
-		X['value'] = X['value'].map(self._remove_stopwords)
-		X['value'] = X['value'].map(self._stem_words)
+		X['product_description'] = X['product_description'].map(self._remove_stopwords)
+		X['product_description'] = X['product_description'].map(self._add_periods)
+		X['product_description'] = X['product_description'].map(self._stem_words)
 
 
 		# corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['product_description']), axis=1)
@@ -97,8 +112,9 @@ class FeatureTransformer(BaseEstimator):
 		
 
 		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
-		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['value']), axis=1).reshape(-1, 1)
+		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
 		query_length = self._get_query_length(X['search_term'])
+		num_sentences = X['product_description'].map(self._num_sentences).reshape(-1, 1)
 		
 
 		# reduced_features = self.selector.transform(bow.todense())
@@ -108,6 +124,7 @@ class FeatureTransformer(BaseEstimator):
 		features.append(is_query_in_title)
 		features.append(is_query_in_description)
 		features.append(query_length)
+		features.append(num_sentences)
 
 		features = np.hstack(features)
 		
