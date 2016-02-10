@@ -39,8 +39,8 @@ class FeatureTransformer(BaseEstimator):
 		X['product_title'] = X['product_title'].map(self._remove_stopwords)
 		X['product_title'] = X['product_title'].map(self._stem_words)
 		
-		X['product_description'] = X['product_description'].map(self._remove_stopwords)
-		X['product_description'] = X['product_description'].map(self._stem_words)
+		X['value'] = X['value'].map(self._remove_stopwords)
+		X['value'] = X['value'].map(self._stem_words)
 
 		# corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['product_description']), axis=1)
 		# self.count_vect = CountVectorizer(analyzer='word', min_df=2)
@@ -48,7 +48,7 @@ class FeatureTransformer(BaseEstimator):
 
 		
 		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
-		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
+		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['value']), axis=1).reshape(-1, 1)
 		query_length = self._get_query_length(X['search_term'])
 
 		# self.selector = SelectKBest(f_regression, k=10)
@@ -88,8 +88,8 @@ class FeatureTransformer(BaseEstimator):
 		X['product_title'] = X['product_title'].map(self._remove_stopwords)
 		X['product_title'] = X['product_title'].map(self._stem_words)
 		
-		X['product_description'] = X['product_description'].map(self._remove_stopwords)
-		X['product_description'] = X['product_description'].map(self._stem_words)
+		X['value'] = X['value'].map(self._remove_stopwords)
+		X['value'] = X['value'].map(self._stem_words)
 
 
 		# corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['product_description']), axis=1)
@@ -97,7 +97,7 @@ class FeatureTransformer(BaseEstimator):
 		
 
 		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
-		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
+		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['value']), axis=1).reshape(-1, 1)
 		query_length = self._get_query_length(X['search_term'])
 		
 
