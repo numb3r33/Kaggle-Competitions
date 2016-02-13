@@ -56,6 +56,8 @@ class FeatureTransformer(BaseEstimator):
 		
 		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
 		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
+		jaccard_distance_search_title = X.apply(self._jaccard_distance_search_title, axis=1).reshape(-1, 1)
+		jaccard_distance_search_description = X.apply(self._jaccard_distance_search_description, axis=1).reshape(-1, 1)
 		query_length = self._get_query_length(X['search_term'])
 		
 		# self.selector = SelectKBest(f_regression, k=10)
@@ -67,6 +69,8 @@ class FeatureTransformer(BaseEstimator):
 		features.append(is_query_in_title)
 		features.append(is_query_in_description)
 		features.append(query_length)
+		features.append(jaccard_distance_search_title)
+		features.append(jaccard_distance_search_description)
 		features.append(num_sentences)
 
 		features = np.hstack(features)
@@ -81,6 +85,7 @@ class FeatureTransformer(BaseEstimator):
 
 	def _preprocess(self, sentence):
 		sentence = sentence.replace('x', ' times ')
+		sentence = sentence.replace('/', ' by ')
 		sentence = sentence.replace("'", ' inches ')
 		sentence = sentence.replace('in.', ' inches ')
 		sentence = sentence.replace('ft', ' feet ')
@@ -93,6 +98,19 @@ class FeatureTransformer(BaseEstimator):
 		sentence = sentence.replace('*', ' times ')
 
 		return sentence
+
+	def _jaccard_distance_search_title(self, df):
+		search_term = set(df['search_term'])
+		product_title = set(df['product_title'])
+
+		return len(search_term & product_title) * 1. / len(search_term | product_title)
+	
+	def _jaccard_distance_search_description(self, df):
+		search_term = set(df['search_term'])
+		product_description = set(df['product_description'])
+
+		return len(search_term & product_description) * 1. / len(search_term | product_description)
+
 
 
 
@@ -141,6 +159,8 @@ class FeatureTransformer(BaseEstimator):
 
 		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
 		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
+		jaccard_distance_search_title = X.apply(self._jaccard_distance_search_title, axis=1).reshape(-1, 1)
+		jaccard_distance_search_description = X.apply(self._jaccard_distance_search_description, axis=1).reshape(-1, 1)
 		query_length = self._get_query_length(X['search_term'])
 		
 
@@ -151,6 +171,8 @@ class FeatureTransformer(BaseEstimator):
 		features.append(is_query_in_title)
 		features.append(is_query_in_description)
 		features.append(query_length)
+		features.append(jaccard_distance_search_title)
+		features.append(jaccard_distance_search_description)
 		features.append(num_sentences)
 
 		features = np.hstack(features)
