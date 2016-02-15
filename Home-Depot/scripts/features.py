@@ -3,6 +3,9 @@ from sklearn.base import BaseEstimator
 from sklearn.feature_extraction import stop_words
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.feature_selection import SelectKBest, f_regression
+from sklearn.decomposition import TruncatedSVD
+
+from sklearn.preprocessing import LabelEncoder
 
 
 import nltk
@@ -53,7 +56,21 @@ class FeatureTransformer(BaseEstimator):
 		X['brand'] = X['brand'].map(self._stem_words)
 		X['brand'] = X['brand'].map(self._preprocess)
 
-		
+		# count frequency of the search term, product title and brand
+		search_term_freq = nltk.FreqDist(X['search_term'])
+		product_title_freq = nltk.FreqDist(X['product_title'])
+		brand_freq = nltk.FreqDist(X['brand'])
+
+		# corpus of text
+		# corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['brand']), axis=1)
+		# self.unigram_vect = TfidfVectorizer(stop_words='english')
+		# unigrams = self.unigram_vect.fit_transform(corpus)
+
+		# self.truncated_svd = TruncatedSVD(n_components=25, random_state=1729)
+		# reduced_features = self.truncated_svd.fit_transform(unigrams)
+
+
+
 		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
 		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
 		is_query_in_brand = X.apply(lambda x: self._contains_query_term(x['search_term'], x['brand']), axis=1).reshape(-1, 1)
@@ -65,9 +82,14 @@ class FeatureTransformer(BaseEstimator):
 		brand_length = X['brand'].map(lambda x: len(x.split(' '))).reshape(-1, 1)
 		description_length = X['product_description'].map(lambda x: len(x.split(' '))).reshape(-1, 1)
 		
+		# label search term, title and brand based on the frequency
+		search_term_popularity = X['search_term'].map(lambda x: search_term_freq[x]).reshape(-1, 1)
+		product_title_popularity = X['product_title'].map(lambda x: product_title_freq[x]).reshape(-1, 1)
+		product_brand = X['brand'].map(lambda x: brand_freq[x]).reshape(-1, 1)
 
 		features = []
 
+		# features.append(reduced_features)
 		features.append(is_query_in_title)
 		features.append(is_query_in_description)
 		features.append(is_query_in_brand)
@@ -79,6 +101,9 @@ class FeatureTransformer(BaseEstimator):
 		features.append(jaccard_distance_search_description)
 		features.append(jaccard_distance_search_brand)
 		features.append(num_sentences_description)
+		features.append(search_term_popularity)
+		features.append(product_title_popularity)
+		features.append(description_length)
 		
 
 		features = np.hstack(features)
@@ -217,6 +242,7 @@ class FeatureTransformer(BaseEstimator):
 	
 		
 	def transform(self, X):
+		
 		X['search_term'] = X['search_term'].map(self._remove_stopwords)
 		X['search_term'] = X['search_term'].map(self._stem_words)
 		X['search_term'] = X['search_term'].map(self._preprocess)
@@ -232,12 +258,22 @@ class FeatureTransformer(BaseEstimator):
 		X['product_description'] = X['product_description'].map(self._stem_words)
 		X['product_description'] = X['product_description'].map(self._preprocess)
 
-		
 		X['brand'] = X['brand'].map(self._remove_stopwords)
 		X['brand'] = X['brand'].map(self._stem_words)
 		X['brand'] = X['brand'].map(self._preprocess)
 
-		
+		# count frequency of the search term, product title and brand
+		search_term_freq = nltk.FreqDist(X['search_term'])
+		product_title_freq = nltk.FreqDist(X['product_title'])
+		brand_freq = nltk.FreqDist(X['brand'])
+
+		# corpus of text
+		# corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['brand']), axis=1)
+		# unigrams = self.unigram_vect.transform(corpus)
+		# reduced_features = self.truncated_svd.transform(unigrams)
+
+
+
 		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
 		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
 		is_query_in_brand = X.apply(lambda x: self._contains_query_term(x['search_term'], x['brand']), axis=1).reshape(-1, 1)
@@ -248,10 +284,15 @@ class FeatureTransformer(BaseEstimator):
 		title_length = X['product_title'].map(lambda x: len(x.split(' '))).reshape(-1, 1)
 		brand_length = X['brand'].map(lambda x: len(x.split(' '))).reshape(-1, 1)
 		description_length = X['product_description'].map(lambda x: len(x.split(' '))).reshape(-1, 1)
+		
+		# label search term, title and brand based on the frequency
+		search_term_popularity = X['search_term'].map(lambda x: search_term_freq[x]).reshape(-1, 1)
+		product_title_popularity = X['product_title'].map(lambda x: product_title_freq[x]).reshape(-1, 1)
+		product_brand = X['brand'].map(lambda x: brand_freq[x]).reshape(-1, 1)
 
-		
 		features = []
-		
+
+		# features.append(reduced_features)
 		features.append(is_query_in_title)
 		features.append(is_query_in_description)
 		features.append(is_query_in_brand)
@@ -263,6 +304,9 @@ class FeatureTransformer(BaseEstimator):
 		features.append(jaccard_distance_search_description)
 		features.append(jaccard_distance_search_brand)
 		features.append(num_sentences_description)
+		features.append(search_term_popularity)
+		features.append(product_title_popularity)
+		features.append(description_length)
 		
 
 		features = np.hstack(features)
