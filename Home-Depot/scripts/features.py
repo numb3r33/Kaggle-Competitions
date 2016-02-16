@@ -74,14 +74,20 @@ class FeatureTransformer(BaseEstimator):
 		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
 		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
 		is_query_in_brand = X.apply(lambda x: self._contains_query_term(x['search_term'], x['brand']), axis=1).reshape(-1, 1)
+		
 		jaccard_distance_search_title = X.apply(self._jaccard_distance_search_title, axis=1).reshape(-1, 1)
 		jaccard_distance_search_description = X.apply(self._jaccard_distance_search_description, axis=1).reshape(-1, 1)
 		jaccard_distance_search_brand = X.apply(self._jaccard_distance_search_brand, axis=1).reshape(-1, 1)
+		
 		query_length = X['search_term'].map(lambda x: len(x.split(' '))).reshape(-1, 1)
 		title_length = X['product_title'].map(lambda x: len(x.split(' '))).reshape(-1, 1)
 		brand_length = X['brand'].map(lambda x: len(x.split(' '))).reshape(-1, 1)
 		description_length = X['product_description'].map(lambda x: len(x.split(' '))).reshape(-1, 1)
-		
+			
+		# check to see if search term has dimensions
+
+		has_dimensions = X['search_term'].map(self._check_for_dimensions).reshape(-1, 1)
+
 		# label search term, title and brand based on the frequency
 		search_term_popularity = X['search_term'].map(lambda x: search_term_freq[x]).reshape(-1, 1)
 		product_title_popularity = X['product_title'].map(lambda x: product_title_freq[x]).reshape(-1, 1)
@@ -101,6 +107,7 @@ class FeatureTransformer(BaseEstimator):
 		features.append(jaccard_distance_search_description)
 		features.append(jaccard_distance_search_brand)
 		features.append(num_sentences_description)
+		features.append(has_dimensions)
 		features.append(search_term_popularity)
 		features.append(product_title_popularity)
 		features.append(description_length)
@@ -224,6 +231,10 @@ class FeatureTransformer(BaseEstimator):
 
 		return len(search_term & product_brand) * 1. / (len(search_term | product_brand) + 1)
 
+	def _check_for_dimensions(self, search_term):
+		dimensions_regex = r'[0-9]+[ ]*x[ ]*[0-9]+[ ]*(?:x[ ]*[0-9]+)?'
+
+		return int(len(re.findall(dimensions_regex, search_term)) > 0)
 
 	def _contains_query_term(self, needle, haystack):
 		return sum(int(haystack.find(word)>=0) for word in needle.split())
@@ -285,6 +296,10 @@ class FeatureTransformer(BaseEstimator):
 		brand_length = X['brand'].map(lambda x: len(x.split(' '))).reshape(-1, 1)
 		description_length = X['product_description'].map(lambda x: len(x.split(' '))).reshape(-1, 1)
 		
+		# check to see if search term has dimensions
+
+		has_dimensions = X['search_term'].map(self._check_for_dimensions).reshape(-1, 1)
+
 		# label search term, title and brand based on the frequency
 		search_term_popularity = X['search_term'].map(lambda x: search_term_freq[x]).reshape(-1, 1)
 		product_title_popularity = X['product_title'].map(lambda x: product_title_freq[x]).reshape(-1, 1)
@@ -304,6 +319,7 @@ class FeatureTransformer(BaseEstimator):
 		features.append(jaccard_distance_search_description)
 		features.append(jaccard_distance_search_brand)
 		features.append(num_sentences_description)
+		features.append(has_dimensions)
 		features.append(search_term_popularity)
 		features.append(product_title_popularity)
 		features.append(description_length)
