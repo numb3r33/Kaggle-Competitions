@@ -12,7 +12,7 @@ def build_random_forest_model():
 
 	ft = FeatureTransformer()
 
-	reg = RandomForestRegressor(n_estimators=50, n_jobs=-1)
+	reg = RandomForestRegressor(n_estimators=325, max_depth=8, n_jobs=-1)
 	pipeline = Pipeline([('ft', ft), ('reg', reg)])
 
 	return pipeline

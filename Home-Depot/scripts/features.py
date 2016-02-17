@@ -45,6 +45,7 @@ class FeatureTransformer(BaseEstimator):
 		X['product_title'] = X['product_title'].map(self._stem_words)
 		X['product_title'] = X['product_title'].map(self._preprocess)
 
+		# how detailed the description is
 		num_sentences_description = X['product_description'].map(self._num_sentences).reshape(-1, 1)
 
 		X['product_description'] = X['product_description'].map(self._remove_stopwords)
@@ -86,7 +87,7 @@ class FeatureTransformer(BaseEstimator):
 			
 		# check to see if search term has dimensions
 
-		has_dimensions = X['search_term'].map(self._check_for_dimensions).reshape(-1, 1)
+		# has_dimensions = X['search_term'].map(self._check_for_dimensions).reshape(-1, 1)
 
 		# label search term, title and brand based on the frequency
 		search_term_popularity = X['search_term'].map(lambda x: search_term_freq[x]).reshape(-1, 1)
@@ -107,7 +108,7 @@ class FeatureTransformer(BaseEstimator):
 		features.append(jaccard_distance_search_description)
 		features.append(jaccard_distance_search_brand)
 		features.append(num_sentences_description)
-		features.append(has_dimensions)
+		# features.append(has_dimensions)
 		features.append(search_term_popularity)
 		features.append(product_title_popularity)
 		features.append(description_length)
@@ -129,7 +130,6 @@ class FeatureTransformer(BaseEstimator):
 		s = s.replace("inches","in.") 
 		s = s.replace("inch","in.")
 		s = s.replace(" in ","in. ") 
-		s = s.replace(" in.","in.") 
 
 		s = s.replace("''","ft.") 
 		s = s.replace(" feet ","ft. ") 
@@ -169,6 +169,19 @@ class FeatureTransformer(BaseEstimator):
 		s = s.replace("7x","7 xby ")
 		s = s.replace("8x","8 xby ")
 		s = s.replace("9x","9 xby ")
+
+		s = s.replace("1", "one")
+		s = s.replace("2", "two")
+		s = s.replace("3", "three")
+		s = s.replace("4", "four")
+		s = s.replace("5", "five")
+		s = s.replace("6", "six")
+		s = s.replace("7", "seven")
+		s = s.replace("8", "eight")
+		s = s.replace("9", "nine")
+		s = s.replace("0", "zero")
+
+		s = s.replace("/"," or ")		
 
 		s = s.replace(" sq ft","sq.ft. ") 
 		s = s.replace("sq ft","sq.ft. ")
@@ -210,6 +223,18 @@ class FeatureTransformer(BaseEstimator):
 
 		s = s.replace("amps","amp. ")
 		s = s.replace(" amp ","amp. ")
+
+		s = s.replace("&nbsp", " ")
+
+		s = s.replace("toliet","toilet")
+		s = s.replace("airconditioner","air conditioner")
+		s = s.replace("vinal","vinyl")
+		s = s.replace("vynal","vinyl")
+		s = s.replace("snowbl","snow bl")
+		s = s.replace("plexigla","plexi gla")
+		s = s.replace("rustoleum","rust-oleum")
+		s = s.replace("whirpool","whirlpool")
+		s = s.replace("whirlpoolga", "whirlpool ga")
 
 		return s
 
@@ -298,7 +323,7 @@ class FeatureTransformer(BaseEstimator):
 		
 		# check to see if search term has dimensions
 
-		has_dimensions = X['search_term'].map(self._check_for_dimensions).reshape(-1, 1)
+		# has_dimensions = X['search_term'].map(self._check_for_dimensions).reshape(-1, 1)
 
 		# label search term, title and brand based on the frequency
 		search_term_popularity = X['search_term'].map(lambda x: search_term_freq[x]).reshape(-1, 1)
@@ -319,7 +344,7 @@ class FeatureTransformer(BaseEstimator):
 		features.append(jaccard_distance_search_description)
 		features.append(jaccard_distance_search_brand)
 		features.append(num_sentences_description)
-		features.append(has_dimensions)
+		# features.append(has_dimensions)
 		features.append(search_term_popularity)
 		features.append(product_title_popularity)
 		features.append(description_length)
