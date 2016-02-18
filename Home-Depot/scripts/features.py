@@ -75,6 +75,8 @@ class FeatureTransformer(BaseEstimator):
 		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
 		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
 		is_query_in_brand = X.apply(lambda x: self._contains_query_term(x['search_term'], x['brand']), axis=1).reshape(-1, 1)
+
+		is_query_related = is_query_in_title + is_query_in_description + is_query_in_brand
 		
 		jaccard_distance_search_title = X.apply(self._jaccard_distance_search_title, axis=1).reshape(-1, 1)
 		jaccard_distance_search_description = X.apply(self._jaccard_distance_search_description, axis=1).reshape(-1, 1)
@@ -100,6 +102,8 @@ class FeatureTransformer(BaseEstimator):
 		features.append(is_query_in_title)
 		features.append(is_query_in_description)
 		features.append(is_query_in_brand)
+		features.append(is_query_related)
+
 		features.append(query_length)
 		features.append(title_length)
 		features.append(brand_length)
@@ -235,6 +239,7 @@ class FeatureTransformer(BaseEstimator):
 		s = s.replace("rustoleum","rust-oleum")
 		s = s.replace("whirpool","whirlpool")
 		s = s.replace("whirlpoolga", "whirlpool ga")
+		s = s.replace("aluminum", "aluminium")
 
 		return s
 
@@ -313,6 +318,9 @@ class FeatureTransformer(BaseEstimator):
 		is_query_in_title = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_title']), axis=1).reshape(-1, 1)
 		is_query_in_description = X.apply(lambda x: self._contains_query_term(x['search_term'], x['product_description']), axis=1).reshape(-1, 1)
 		is_query_in_brand = X.apply(lambda x: self._contains_query_term(x['search_term'], x['brand']), axis=1).reshape(-1, 1)
+
+		is_query_related = is_query_in_title + is_query_in_description + is_query_in_brand
+
 		jaccard_distance_search_title = X.apply(self._jaccard_distance_search_title, axis=1).reshape(-1, 1)
 		jaccard_distance_search_description = X.apply(self._jaccard_distance_search_description, axis=1).reshape(-1, 1)
 		jaccard_distance_search_brand = X.apply(self._jaccard_distance_search_brand, axis=1).reshape(-1, 1)
@@ -336,6 +344,8 @@ class FeatureTransformer(BaseEstimator):
 		features.append(is_query_in_title)
 		features.append(is_query_in_description)
 		features.append(is_query_in_brand)
+		features.append(is_query_related)
+
 		features.append(query_length)
 		features.append(title_length)
 		features.append(brand_length)
