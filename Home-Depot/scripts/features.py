@@ -22,7 +22,7 @@ class FeatureTransformer(BaseEstimator):
 
 	def __init__(self):
 		self.stopwords = stop_words.ENGLISH_STOP_WORDS
-		self.stemmer = nltk.stem.SnowballStemmer('english')
+		self.stemmer = nltk.stem.PorterStemmer()
 
 	def get_feature_names(self):
 		feature_names = []
@@ -63,12 +63,12 @@ class FeatureTransformer(BaseEstimator):
 		brand_freq = nltk.FreqDist(X['brand'])
 
 		# corpus of text
-		# corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['brand']), axis=1)
-		# self.unigram_vect = TfidfVectorizer(stop_words='english')
-		# unigrams = self.unigram_vect.fit_transform(corpus)
+		corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['brand']), axis=1)
+		self.unigram_vect = TfidfVectorizer(stop_words='english')
+		unigrams = self.unigram_vect.fit_transform(corpus)
 
-		# self.truncated_svd = TruncatedSVD(n_components=25, random_state=1729)
-		# reduced_features = self.truncated_svd.fit_transform(unigrams)
+		self.truncated_svd = TruncatedSVD(n_components=10, random_state=1729)
+		reduced_features = self.truncated_svd.fit_transform(unigrams)
 
 
 
@@ -89,8 +89,6 @@ class FeatureTransformer(BaseEstimator):
 			
 		# check to see if search term has dimensions
 
-		# has_dimensions = X['search_term'].map(self._check_for_dimensions).reshape(-1, 1)
-
 		# label search term, title and brand based on the frequency
 		search_term_popularity = X['search_term'].map(lambda x: search_term_freq[x]).reshape(-1, 1)
 		product_title_popularity = X['product_title'].map(lambda x: product_title_freq[x]).reshape(-1, 1)
@@ -98,7 +96,8 @@ class FeatureTransformer(BaseEstimator):
 
 		features = []
 
-		# features.append(reduced_features)
+		features.append(reduced_features)
+		
 		features.append(is_query_in_title)
 		features.append(is_query_in_description)
 		features.append(is_query_in_brand)
@@ -108,11 +107,13 @@ class FeatureTransformer(BaseEstimator):
 		features.append(title_length)
 		features.append(brand_length)
 		features.append(description_length)
+		
 		features.append(jaccard_distance_search_title)
 		features.append(jaccard_distance_search_description)
 		features.append(jaccard_distance_search_brand)
+		
 		features.append(num_sentences_description)
-		# features.append(has_dimensions)
+
 		features.append(search_term_popularity)
 		features.append(product_title_popularity)
 		features.append(description_length)
@@ -123,8 +124,8 @@ class FeatureTransformer(BaseEstimator):
 		return features
 
 	def _stem_words(self, sentence):
-		return ' '.join([self.stemmer.stem(words) for words in sentence.split()])
-	
+		return self.stemmer.stem(sentence)
+		
 	def _remove_stopwords(self, sentence):
 		return ' '.join([re.sub(r'[^\w\s\d]','',word.lower()) for word in sentence.split() if word not in self.stopwords])
 
@@ -309,9 +310,9 @@ class FeatureTransformer(BaseEstimator):
 		brand_freq = nltk.FreqDist(X['brand'])
 
 		# corpus of text
-		# corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['brand']), axis=1)
-		# unigrams = self.unigram_vect.transform(corpus)
-		# reduced_features = self.truncated_svd.transform(unigrams)
+		corpus = X.apply(lambda x: '%s %s %s' %(x['search_term'], x['product_title'], x['brand']), axis=1)
+		unigrams = self.unigram_vect.transform(corpus)
+		reduced_features = self.truncated_svd.transform(unigrams)
 
 
 
@@ -329,10 +330,7 @@ class FeatureTransformer(BaseEstimator):
 		brand_length = X['brand'].map(lambda x: len(x.split(' '))).reshape(-1, 1)
 		description_length = X['product_description'].map(lambda x: len(x.split(' '))).reshape(-1, 1)
 		
-		# check to see if search term has dimensions
-
-		# has_dimensions = X['search_term'].map(self._check_for_dimensions).reshape(-1, 1)
-
+		
 		# label search term, title and brand based on the frequency
 		search_term_popularity = X['search_term'].map(lambda x: search_term_freq[x]).reshape(-1, 1)
 		product_title_popularity = X['product_title'].map(lambda x: product_title_freq[x]).reshape(-1, 1)
@@ -340,7 +338,8 @@ class FeatureTransformer(BaseEstimator):
 
 		features = []
 
-		# features.append(reduced_features)
+		features.append(reduced_features)
+		
 		features.append(is_query_in_title)
 		features.append(is_query_in_description)
 		features.append(is_query_in_brand)
@@ -350,11 +349,13 @@ class FeatureTransformer(BaseEstimator):
 		features.append(title_length)
 		features.append(brand_length)
 		features.append(description_length)
+		
 		features.append(jaccard_distance_search_title)
 		features.append(jaccard_distance_search_description)
 		features.append(jaccard_distance_search_brand)
+		
 		features.append(num_sentences_description)
-		# features.append(has_dimensions)
+		
 		features.append(search_term_popularity)
 		features.append(product_title_popularity)
 		features.append(description_length)
