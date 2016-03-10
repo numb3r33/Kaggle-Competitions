@@ -9,3 +9,6 @@ liberty-group/submissions
 PAKDD/data
 PAKDD/submissions
 .ipynb_checkpoints
+.DS_Store
+Standard-Customer-Satisfaction/data
+Standard-Customer-Satisfaction/submissions
