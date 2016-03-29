@@ -6,7 +6,7 @@ Created on Mon Mar 28 07:52:35 2016
 """
 
 import pandas as pd
-import cPickle
+
 ## Evaluation metric is AUC
 
 # load train and test files
@@ -96,17 +96,12 @@ test.loc[:, 'missing_value_var3'] = (test.var3 == -999999).astype(int)
 test.loc[:, 'var3'] = test.var3.fillna(train.var3.mode())
 
 # remove features
-features_to_remove.append('TARGET')
 features = train.columns.drop(features_to_remove)
 
 train_subset = train[features]
+
+features = features.drop('TARGET')
 test_subset = test[features]
 
-# save these datasets
-with open('./data/train_processed.pkl', 'w') as outfile:
-    cPickle.dump(train_subset, outfile)
-    outfile.close()
-
-with open('./data/test_processed.pkl', 'w') as outfile:
-    cPickle.dump(test_subset, outfile)
-    outfile.close()
+train_subset.to_csv('./data/train_processed.csv', index=False)
+test_subset.to_csv('./data/test_processed.csv', index=False)
