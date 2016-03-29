@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Mar 28 22:33:15 2016
+Created on Tue Mar 29 09:24:09 2016
 
 @author: abhishek
 """
@@ -9,7 +9,6 @@ import pandas as pd
 import numpy as np
 
 from sklearn.cross_validation import train_test_split
-from sklearn.metrics import roc_auc_score
 import xgboost as xgb
 
 np.random.seed(44)
@@ -28,10 +27,7 @@ param = dict([('max_depth', 3), ('learning_rate', 0.05), ('min_child_weight', 5)
              ('eval_metric', 'auc'), ('subsample', 0.9), ('seed', 1729)])
 
 dtrain = xgb.DMatrix(X_train.values, label=y_train.values)
-dtest = xgb.DMatrix(X_test.values, label=y_test.values)
 
-watchlist = [(dtest, 'eval', (dtrain, 'train'))]
+num_round = 200
 
-num_round = 100000
-
-bst = xgb.train(param, dtrain, num_round, watchlist)
+xgb.cv(param, dtrain, num_round, nfold=3, seed = 0)

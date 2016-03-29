@@ -9,7 +9,6 @@ import pandas as pd
 import numpy as np
 
 from sklearn.cross_validation import train_test_split
-from sklearn.metrics import roc_auc_score
 import xgboost as xgb
 
 np.random.seed(44)
