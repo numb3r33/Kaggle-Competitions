@@ -21,10 +21,8 @@ test = pd.read_csv('data/test.csv', index_col='ID')
 
 ## need to remove some features because they are either constant or
 ## identical to other column
-
-def get_constant_features(df):
-    columns = df.columns
-    
+        
+def get_constant_features(df, columns):
     constant_features = []
     
     for col in columns:
@@ -33,9 +31,7 @@ def get_constant_features(df):
     
     return constant_features
 
-def get_identical_features(df):
-    columns  = df.columns
-    
+def get_identical_features(df, columns):
     identical_features = []
     
     for i in range(len(columns)):
@@ -59,32 +55,42 @@ def concat_features(constant_features, identical_features):
         
     return features_to_remove
 
-constant_features = get_constant_features(train)
-identical_features = get_identical_features(train)
+columns = train.columns
+
+constant_features = get_constant_features(train, columns)
+columns = columns.drop(constant_features)
+
+identical_features = get_identical_features(train, columns)
 features_to_remove = concat_features(constant_features, identical_features)
 
 ## var 3 has missing value ( -999999 )
 ## 26 more features with missing values
 ## Here is the list
 
-# Index([u'delta_imp_amort_var18_1y3', u'delta_imp_amort_var34_1y3',
-#       u'delta_imp_aport_var13_1y3', u'delta_imp_aport_var17_1y3',
-#       u'delta_imp_aport_var33_1y3', u'delta_imp_compra_var44_1y3',
-#       u'delta_imp_reemb_var13_1y3', u'delta_imp_reemb_var17_1y3',
-#       u'delta_imp_reemb_var33_1y3', u'delta_imp_trasp_var17_in_1y3',
-#       u'delta_imp_trasp_var17_out_1y3', u'delta_imp_trasp_var33_in_1y3',
-#       u'delta_imp_trasp_var33_out_1y3', u'delta_imp_venta_var44_1y3',
-#       u'delta_num_aport_var13_1y3', u'delta_num_aport_var17_1y3',
-#       u'delta_num_aport_var33_1y3', u'delta_num_compra_var44_1y3',
-#       u'delta_num_reemb_var13_1y3', u'delta_num_reemb_var17_1y3',
-#       u'delta_num_reemb_var33_1y3', u'delta_num_trasp_var17_in_1y3',
-#       u'delta_num_trasp_var17_out_1y3', u'delta_num_trasp_var33_in_1y3',
-#       u'delta_num_trasp_var33_out_1y3', u'delta_num_venta_var44_1y3'],
-#      dtype='object')
 some_more_features_with_constant_value = ['delta_num_trasp_var33_out_1y3', 'delta_num_reemb_var33_1y3',
                                           'delta_imp_trasp_var33_out_1y3', 'delta_imp_reemb_var33_1y3',
                                           'delta_imp_amort_var34_1y3', 'delta_imp_amort_var18_1y3']
 
+features_with_9999999999 = ['delta_imp_amort_var18_1y3', 'delta_imp_amort_var34_1y3',
+       'delta_imp_aport_var13_1y3', 'delta_imp_aport_var17_1y3',
+       'delta_imp_aport_var33_1y3', 'delta_imp_compra_var44_1y3',
+       'delta_imp_venta_var44_1y3', 'delta_num_aport_var13_1y3',
+       'delta_num_aport_var17_1y3', 'delta_num_aport_var33_1y3',
+       'delta_num_compra_var44_1y3', 'delta_num_reemb_var13_1y3',
+       'delta_num_reemb_var17_1y3', 'delta_num_reemb_var33_1y3',
+       'delta_num_trasp_var17_in_1y3', 'delta_num_trasp_var17_out_1y3',
+       'delta_num_trasp_var33_in_1y3', 'delta_num_trasp_var33_out_1y3',
+       'delta_num_venta_var44_1y3'
+       ]
+       
+for feat_name in features_with_9999999999:
+    train.loc[:, 'missing_%s' %(feat_name)] = (train[feat_name] == train[feat_name].max()).astype(int)   
+    train.loc[:, feat_name] = train[feat_name].fillna(train[feat_name].mode())
+    
+    test.loc[:, 'missing_%s' %(feat_name)] = (test[feat_name] == test[feat_name].max()).astype(int)   
+    test.loc[:, feat_name] = test[feat_name].fillna(test[feat_name].mode())
+    
+    
 for feat_name in some_more_features_with_constant_value:
     features_to_remove.append(feat_name)
 
@@ -103,5 +109,5 @@ train_subset = train[features]
 features = features.drop('TARGET')
 test_subset = test[features]
 
-train_subset.to_csv('./data/train_processed.csv', index=False)
-test_subset.to_csv('./data/test_processed.csv', index=False)
+train_subset.to_csv('./data/train_processed_handle_na.csv', index=False)
+test_subset.to_csv('./data/test_processed_handle_na.csv', index=False)
