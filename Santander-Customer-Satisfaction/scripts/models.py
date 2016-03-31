@@ -9,29 +9,60 @@ import pandas as pd
 import numpy as np
 
 from sklearn.cross_validation import train_test_split
-from sklearn.metrics import roc_auc_score
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import roc_auc_score, confusion_matrix
+
 import xgboost as xgb
 
 np.random.seed(44)
 
-train = pd.read_csv('./data/train_processed.csv')
-test = pd.read_csv('./data/test_processed.csv')
+train = pd.read_csv('./data/train_processed_handle_na.csv')
+test = pd.read_csv('./data/test_processed_handle_na.csv')
 
 X = train[train.columns.drop('TARGET')]
 y = train.TARGET
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, stratify=y, random_state=1279)
 
-# evaluate xgboost model
-param = dict([('max_depth', 3), ('learning_rate', 0.05), ('min_child_weight', 5), 
-             ('colsample_bytree', 0.8), ('objective', 'binary:logistic'),
-             ('eval_metric', 'auc'), ('subsample', 0.9), ('seed', 1729)])
+# create model pipeline
+clf = xgb.XGBClassifier(n_estimators=250, learning_rate=0.05, max_depth=3, min_child_weight=2, 
+                        colsample_bytree=0.95, subsample=0.8, seed=1729)
 
-dtrain = xgb.DMatrix(X_train.values, label=y_train.values)
-dtest = xgb.DMatrix(X_test.values, label=y_test.values)
+xgb_pipeline = Pipeline([('clf', clf)])
 
-watchlist = [(dtest, 'eval', (dtrain, 'train'))]
+scaler = MinMaxScaler()
+select = SelectKBest(chi2, k=200)
 
-num_round = 100000
+clf = LogisticRegression()
+log_pipeline = Pipeline([('scaler', scaler), ('select', select), ('clf', clf)])
 
-bst = xgb.train(param, dtrain, num_round, watchlist)
+xgb_pipeline.fit(X_train, y_train)
+log_pipeline.fit(X_train, y_train)
+
+predsTrain_xgb = xgb_pipeline.predict_proba(X_train)[:, 1]
+predsTest_xgb = xgb_pipeline.predict_proba(X_test)[:, 1]
+
+predsTrain_log = log_pipeline.predict_proba(X_train)[:, 1]
+predsTest_log = log_pipeline.predict_proba(X_test)[:, 1]
+
+finalPredsTrain = 0.9 * predsTrain_xgb + 0.1 * predsTrain_log
+finalPredsTest = 0.9 * predsTest_xgb + 0.1 * predsTest_log
+
+print 'predictions on the training set %f ' %(roc_auc_score(y_train, finalPredsTrain))
+print 'predictions on the test set %f ' %(roc_auc_score(y_test, finalPredsTest))
+
+### Train on full dataset
+xgb_pipeline.fit(X, y)
+log_pipeline.fit(X,y)
+
+preds_xgb = xgb_pipeline.predict_proba(test)[:, 1]
+preds_log = log_pipeline.predict_proba(test)[:, 1]
+
+predictions = 0.9 * preds_xgb + 0.1 * preds_log
+
+submission = pd.read_csv('./data/sample_submission.csv')
+submission.loc[:, 'TARGET'] = predictions
+submission.to_csv('./submissions/ensemble_xgb_log.csv', index=False)
