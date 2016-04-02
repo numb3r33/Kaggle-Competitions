@@ -29,33 +29,49 @@ class Dataset():
         for col in self.features:
             if (self.train[col] == missing_values[0]).any():  
                 self.train['is_missing_%s' %(col)] = (self.train[col] == missing_values[0]).astype(int)                
-                self.train[col] = self.train[col].replace(missing_values[0], strategy(self.train[col]))
+                strategy_applied_value = strategy(self.train[self.train[col] != missing_values[0]][col])               
+                self.train[col] = self.train[col].replace(missing_values[0], strategy_applied_value)
                 
                 self.test['is_missing_%s' %(col)] = (self.test[col] == missing_values[0]).astype(int)                
-                self.test[col] = self.test[col].replace(missing_values[0], strategy(self.test[col]))
+                strategy_applied_value = strategy(self.test[self.test[col] != missing_values[0]][col])               
+                
+                self.test[col] = self.test[col].replace(missing_values[0], strategy_applied_value)
             
             elif (self.train[col] == missing_values[1]).any():
                 self.train['is_missing_%s' %(col)] = (self.train[col] == missing_values[1]).astype(int)
-                self.train[col] = self.train[col].replace(missing_values[1], strategy(self.train[col]))
+                strategy_applied_value = strategy(self.train[self.train[col] != missing_values[1]][col])               
+                                
+                self.train[col] = self.train[col].replace(missing_values[1], strategy_applied_value)
                 
                 self.test['is_missing_%s' %(col)] = (self.test[col] == missing_values[1]).astype(int)
-                self.test[col] = self.test[col].replace(missing_values[1], strategy(self.test[col]))
+                strategy_applied_value = strategy(self.test[self.test[col] != missing_values[1]][col])               
+                
+                self.test[col] = self.test[col].replace(missing_values[1], strategy_applied_value)
     
-    def log_transformation(self):
+    def get_positive_valued_features(self):
+        feature_status = (self.train < 0).any()
+        neg_valued_features = feature_status[feature_status == True].index
         
-        self.train = self.train[self.features].applymap(np.log1p)
-        self.test = self.test[self.features].applymap(np.log1p)
+        return self.features.drop(neg_valued_features)
+        
+    def log_transformation(self):
+        self.non_neg_features = self.get_positive_valued_features()
+        
+        self.train[self.non_neg_features] = self.train[self.non_neg_features].applymap(np.log1p)
+        self.test[self.non_neg_features] = self.test[self.non_neg_features].applymap(np.log1p)
     
     def discretize(self):
-        self.train = self.train[self.features].astype(np.int)
-        self.test = self.test[self.features].astype(np.int)
+        self.train = self.train.astype(np.int)
+        self.test = self.test.astype(np.int)
         
     def preprocess(self, impute_strategy):
         self.impute_missing_values(impute_strategy)
         self.log_transformation()
         self.discretize()
         
-        
+
+dataset_mean = Dataset(train, test)
+dataset_mean.preprocess(np.mean)
                 
             
                 
