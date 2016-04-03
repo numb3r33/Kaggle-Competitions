@@ -67,7 +67,7 @@ class Dataset():
     def preprocess(self, impute_strategy):
         self.impute_missing_values(impute_strategy)
         self.log_transformation()
-        self.discretize()
+#        self.discretize()
         
 
 dataset_mean = Dataset(train, test)
