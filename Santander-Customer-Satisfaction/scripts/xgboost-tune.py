@@ -13,8 +13,8 @@ import xgboost as xgb
 
 np.random.seed(44)
 
-train = pd.read_csv('./data/synthesized/train_mean_cont.csv')
-test = pd.read_csv('./data/synthesized/test_mean_cont.csv')
+train = pd.read_csv('./data/train.csv')
+test = pd.read_csv('./data/test.csv')
 
 X = train[train.columns.drop('TARGET')]
 y = train.TARGET
@@ -22,8 +22,8 @@ y = train.TARGET
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, stratify=y, random_state=1279)
 
 # evaluate xgboost model
-param = dict([('max_depth', 3), ('learning_rate', 0.05), ('min_child_weight', 3),
-              ('subsample', 0.8), ('colsample_bytree', 0.8),
+param = dict([('max_depth', 3), ('learning_rate', 0.1), ('colsample_bytree', 0.9),
+              ('subsample', 0.95),
               ('objective', 'binary:logistic'),
              ('eval_metric', 'auc'), ('seed', 1729)])
 
