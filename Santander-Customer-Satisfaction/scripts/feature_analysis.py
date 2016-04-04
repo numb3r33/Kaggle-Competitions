@@ -29,22 +29,49 @@ class Dataset():
         for col in self.features:
             if (self.train[col] == missing_values[0]).any():  
                 self.train['is_missing_%s' %(col)] = (self.train[col] == missing_values[0]).astype(int)                
-                strategy_applied_value = strategy(self.train[self.train[col] != missing_values[0]][col])               
+                
+                if strategy == 'mean':    
+                    strategy_applied_value = self.train[self.train[col] != missing_values[0]][col].mean()             
+                elif strategy == 'median':
+                    strategy_applied_value = self.train[self.train[col] != missing_values[0]][col].median()
+                else:
+                    strategy_applied_value = self.train[self.train[col] != missing_values[0]][col].mode()
+                    
                 self.train[col] = self.train[col].replace(missing_values[0], strategy_applied_value)
                 
-                self.test['is_missing_%s' %(col)] = (self.test[col] == missing_values[0]).astype(int)                
-                strategy_applied_value = strategy(self.test[self.test[col] != missing_values[0]][col])               
                 
+                self.test['is_missing_%s' %(col)] = (self.test[col] == missing_values[0]).astype(int)                
+                
+                if strategy == 'mean':    
+                    strategy_applied_value = self.test[self.test[col] != missing_values[0]][col].mean()               
+                elif strategy == 'median':
+                    strategy_applied_value = self.test[self.test[col] != missing_values[0]][col].median()
+                else:
+                    strategy_applied_value = self.test[self.test[col] != missing_values[0]][col].mode()
+                                
                 self.test[col] = self.test[col].replace(missing_values[0], strategy_applied_value)
             
             elif (self.train[col] == missing_values[1]).any():
                 self.train['is_missing_%s' %(col)] = (self.train[col] == missing_values[1]).astype(int)
-                strategy_applied_value = strategy(self.train[self.train[col] != missing_values[1]][col])               
+                
+                if strategy == 'mean':    
+                    strategy_applied_value = self.train[self.train[col] != missing_values[1]][col].mean()             
+                elif strategy == 'median':
+                    strategy_applied_value = self.train[self.train[col] != missing_values[1]][col].median()
+                else:
+                    strategy_applied_value = self.train[self.train[col] != missing_values[1]][col].mode()
                                 
                 self.train[col] = self.train[col].replace(missing_values[1], strategy_applied_value)
+
                 
                 self.test['is_missing_%s' %(col)] = (self.test[col] == missing_values[1]).astype(int)
-                strategy_applied_value = strategy(self.test[self.test[col] != missing_values[1]][col])               
+                
+                if strategy == 'mean':    
+                    strategy_applied_value = self.test[self.test[col] != missing_values[1]][col]              
+                elif strategy == 'median':
+                    strategy_applied_value = self.test[self.test[col] != missing_values[1]][col]
+                else:
+                    strategy_applied_value = self.test[self.test[col] != missing_values[1]][col]
                 
                 self.test[col] = self.test[col].replace(missing_values[1], strategy_applied_value)
     
@@ -71,7 +98,13 @@ class Dataset():
         
 
 dataset_mean = Dataset(train, test)
-dataset_mean.preprocess(np.mean)
+dataset_mean.preprocess('mean')
+
+dataset_median = Dataset(train, test)
+dataset_median.preprocess('median')
+
+dataset_mode = Dataset(train, test)
+dataset_mode.preprocess('mode')
                 
             
                 
