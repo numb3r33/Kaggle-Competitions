@@ -58,10 +58,15 @@ for j, clf in enumerate(clfs):
 print
 print "Blending."
 clf = LogisticRegression()
-clf.fit(dataset_blend_train, ytrain)
+clf.fit(dataset_blend_train, y)
 y_submission = clf.predict_proba(dataset_blend_test)[:,1]
 
 print "Linear stretch of predictions to [0,1]"
 y_submission = (y_submission - y_submission.min()) / (y_submission.max() - y_submission.min())
 
-print 'ROC AUC Score on test set %f ' %(roc_auc_score(ytest, y_submission))
+
+#print 'ROC AUC Score on test set %f ' %(roc_auc_score(ytest, y_submission))
+
+submission_df = pd.read_csv('./data/sample_submission.csv')
+submission_df['TARGET'] = y_submission
+submission_df.to_csv('./submissions/blend_two_xgboost.csv', index=False)
