@@ -6,6 +6,7 @@ Created on Wed Mar 30 23:33:52 2016
 """
 import pandas as pd
 import numpy as np
+import cPickle
 
 from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -16,11 +17,16 @@ from sklearn.metrics import mean_squared_error
 
 np.random.seed(1729)
 
-train = pd.read_csv('./data/train.csv')
-test = pd.read_csv('./data/test.csv')
+with open('./data/synthesized/train_processed.pkl', 'r') as infile:    
+    train = cPickle.load(infile)
+    infile.close()
 
-corpus_svd = np.loadtxt('./data/train_text_svd.txt')
-corpus_test_svd = np.loadtxt('./data/test_text_svd.txt')
+with open('./data/synthesized/test_processed.pkl', 'r') as infile:    
+    test = cPickle.load(infile)
+    infile.close()
+    
+
+
 
 X_train, X_test, y_train, y_test = train_test_split(corpus_svd, train.relevance, test_size=0.3,
                                                     random_state=44)

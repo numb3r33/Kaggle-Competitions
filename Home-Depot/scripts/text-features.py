@@ -35,7 +35,7 @@ def stem_words(sentence):
 train = pd.merge(train, description, on='product_uid', how='left')
 test = pd.merge(test, description, on='product_uid', how='left')
 
-## remove non-digit characters
+## remove non-alphanumeric characters
 train.loc[:, 'product_description'] = train.product_description.map(lambda x: re.sub(r'[^A-Za-z0-9 ]', 
                                                                     ' ', x))
 
